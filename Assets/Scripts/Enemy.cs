@@ -1,16 +1,15 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 [RequireComponent(typeof(Rigidbody2D))]
-public class Square : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
-    public float Speed = 5f;
-    public int death = 0;
+    public float Speed = 2f;
     public float JumpForce = 300f;
-    
-    private bool facingRight = true;
+    public bool facingRight = true;
+
     private float spawnX,spawnY;
     private DateTime t = DateTime.Now;
     private bool _isGrounded;
@@ -28,27 +27,25 @@ public class Square : MonoBehaviour
 
     void FixedUpdate()
     {
-        JumpLogic();
+        //JumpLogic();
 
         MovementLogic();
     }
 
     private void MovementLogic()
     {
-        float moveHorizontal = Input.GetAxis("Horizontal");
+        Vector2 movement = new Vector3(Speed, 0f);
 
-        if (moveHorizontal > 0 && !facingRight)
-    		Flip ();
-    	else if (moveHorizontal < 0 && facingRight)
-    		Flip ();
+        int countFacingRight;
 
-        Vector2 movement = new Vector3(moveHorizontal, 0f);
+        if(facingRight) countFacingRight = 1;
+        else countFacingRight = -1;
 
-        transform.Translate(movement * Speed * Time.fixedDeltaTime);
+        transform.Translate(movement * Time.fixedDeltaTime * countFacingRight);
         //_rb.AddForce(Vector2.right*movement*Speed*Time.fixedDeltaTime);
     }
 
-    private void JumpLogic()
+    /*private void JumpLogic()
     {
         if (_isGrounded)
         {
@@ -57,7 +54,7 @@ public class Square : MonoBehaviour
                 _rb.AddForce(Vector2.up * JumpForce);
             }
         }
-    }
+    }*/
 
     private void Flip(){
     	facingRight = !facingRight;
@@ -68,13 +65,14 @@ public class Square : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-    	if ((collision.gameObject.tag == "DieBox")||(collision.gameObject.tag == "Enemy"))
+    	if (collision.gameObject.tag == "DieBox")
         {
-            transform.position = new Vector3(spawnX,spawnY,transform.position.z);
-            death++;
+            Destroy(gameObject);
         }
-		
-		if (collision.gameObject.tag == "EndLevel") SceneManager.LoadScene("Level_2");
+        if (collision.gameObject.tag == "Wall")
+        {
+            Flip();
+        }
 	}
     void OnCollisionStay2D(Collision2D collision)
     {
@@ -82,11 +80,6 @@ public class Square : MonoBehaviour
         if(collision.gameObject.tag == ("Platform"))
         {
             this.transform.parent = collision.transform;
-        }
-        if(collision.gameObject.tag == ("CheckPoint"))
-        {
-            spawnX = transform.position.x;
-            spawnY = transform.position.y;
         }
     }
 
@@ -106,10 +99,5 @@ public class Square : MonoBehaviour
         {
             _isGrounded = value;
         }
-    }
-
-    void OnGUI()
-    {
-    	GUI.Box (new Rect(0,0,100,20),"Death : " + death);
     }
 }
